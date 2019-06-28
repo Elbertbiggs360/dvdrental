@@ -29,3 +29,19 @@ def movies():
 @app.route('/movies/<movie_name>')
 def movie(movie_name):
     return render_template('movie.html', movie_name=movie_name)
+
+@app.route('/categories')
+def categories():
+    pass
+
+@app.route('/condition3')
+def condition3():
+    pass
+
+@app.route('/movies/search')
+def filterMovies():
+    pass
+
+@app.route('/movies/add')
+def add_movie(params):
+    pass
