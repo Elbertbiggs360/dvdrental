@@ -2,6 +2,8 @@ import os
 from flask import Flask, render_template
 from psycopg2 import connect
 from config import app_config
+import json
+import decimal
 
 app = Flask(__name__)
 app_config_file = app_config[os.getenv('APP_SETTINGS') or 'development']
@@ -20,7 +22,9 @@ def healthcheck():
 
 @app.route('/movies')
 def movies():
-    return 'list of movies'
+    cur.execute('SELECT title FROM film')
+    items = cur.fetchall()
+    return render_template('movies.html', movies=items, total=len(items))
 
 @app.route('/movies/<movie_name>')
 def movie(movie_name):
