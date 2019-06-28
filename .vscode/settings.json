@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": ".venv/bin/python3.7",
+    "python.pythonPath": ".venv/bin/python",
     "workbench.colorCustomizations": {
         "activityBar.background": "#ed3901",
         "activityBar.foreground": "#e7e7e7",

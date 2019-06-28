@@ -8,7 +8,10 @@ load_dotenv(dotenv_path)
 class Config(object):
     DEBUG = False
     BASE_DIR = os.path.dirname(__file__)
-    DB_URI = os.environ.get('DB_URI') or 'postgresql://localhost/dvdrental'
+    DB_NAME = os.environ.get('DB_NAME') or 'dvdrental'
+    DB_USER = os.environ.get('DB_USER') or 'postgres'
+    DB_PASSWORD = os.environ.get('DB_PASSWORD') or ''
+    DB_URI = os.environ.get('DB_URI') or 'postgresql://localhost/{}'.format(DB_NAME)
 
 class Development(Config):
     DEBUG = True
@@ -22,3 +25,9 @@ class Production(Config):
     DEBUG = False
     TESTING = False
     DEVELOPMENT = False
+
+app_config = {
+    'development': Development,
+    'testing': Testing,
+    'production': Production
+}
