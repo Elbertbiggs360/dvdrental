@@ -12,3 +12,4 @@ python-dotenv==0.10.3
 pytz==2019.1
 six==1.12.0
 Werkzeug==0.15.4
+enum34==1.1.6

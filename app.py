@@ -1,9 +1,11 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, abort
 from psycopg2 import connect
 from config import app_config
 import json
 import decimal
+import datetime
+from utils import Ratings
 
 app = Flask(__name__)
 app_config_file = app_config[os.getenv('APP_SETTINGS') or 'development']
@@ -43,5 +45,29 @@ def filterMovies():
     pass
 
 @app.route('/movies/add')
-def add_movie(params):
-    pass
+def add_movie():
+    movie = {
+        'title': 'Dark Knight',
+        'description': 'Lorem ipsum',
+        'release_year': 2012,
+        'language_id': 1,
+        'rental_duration': 12,
+        'rental_rate': 2.99,
+        'length': 86,
+        'replacement_cost': 12.99,
+        'rating': 'PG',
+        'last_update': datetime.datetime.now(),
+        'special_features': 'test'
+    }
+    movie['fulltext'] = ', '.join(movie['title'])
+    cur.execute(
+        '''
+        INSERT INTO film (title, description, release_year, language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features)
+        VALUES ('{}', '{}', {}, {}, {}, {}, {}, {}, {}, '{}')
+        '''.format(*['a', 'b', 3, 1, 12, 6.99, 7, 8.99, Ratings.PG, 'test'])
+    )
+    try:
+        conn.commit()
+        return json.dumps(movie)
+    except Exception as e:
+        return 'Error: {}.'.format(e)
