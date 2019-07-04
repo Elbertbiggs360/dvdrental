@@ -98,8 +98,28 @@ def create_ratings(list):
         return True
     return False
 
+def create_vector_doc():
+    cur.execute(f"SELECT max(film_id) FROM film WHERE title='{movie['title']}'")
+    new_film_id = cur.fetchone()[0]
+    cur.execute(
+        f"""
+            SELECT (title, description) AS DOCUMENT
+            FROM film where film_id = {new_film_id}
+        """
+    )
+    res = cur.fetchone()
+    full_text = res[0].replace('"', "'")
+    cur.execute(
+        f"""
+        UPDATE film
+        SET fulltext = to_tsvector({full_text})
+        WHERE
+            film_id='{new_film_id}'
+        """
+    )
+
 def add_language(lang):
-    cur.execute(f"INSERT INTO language (name) VALUES ('{lang}')") # add ON CONFLICT (name) DO NOTHING for unique columns
+    cur.execute(f"INSERT INTO language (name) VALUES ('{lang}')")
     cur.execute(f"SELECT language_id FROM language where name='{lang}'")
     lang_id = cur.fetchone()[0]
     if conn.commit():
