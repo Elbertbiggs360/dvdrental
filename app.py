@@ -36,13 +36,58 @@ def movie(movie_name):
 def categories():
     pass
 
+@app.route('/condition2')
+def condition2():
+    '''
+    Find the names (first and last) of all the actors and customers whose
+    first name is the same as the first name of the actor with ID 8.
+    Do not return the actor with ID 8 himself.
+    Note that you cannot use the name of the actor with ID 8 as a constant
+    (only the ID)
+    '''
+    cur.execute(f"""
+                    SELECT
+                        a.actor_id,
+                        a.first_name a_first_name,
+                        a.last_name a_last_name,
+                        c.first_name c_first_name,
+                        c.last_name c_last_name
+                    FROM
+                        actor a
+                    INNER JOIN
+                        customer c ON a.first_name = c.first_name
+                    WHERE a.first_name IN (
+                        SELECT a.first_name from actor a WHERE actor_id = 8
+                    )
+                """
+    )
+    res = cur.fetchall()
+    res
+    return json.dumps(res)
+
 @app.route('/condition3')
 def condition3():
-    pass
+    '''b
+    Find all the film categories in which there are between 55 and 65 films.
+    Return the names of these categories and the number of films per category, sorted by the number of films.
+    '''
+    cur.execute(f"""
+                    select c.name, COUNT(fc.film_id) as num_film
+                    from category c
+                    join film_category fc
+                    ON c.category_id = fc.category_id
+                    GROUP BY c.name
+                    HAVING COUNT(fc.film_id) BETWEEN 55 AND 65
+                    ORDER BY COUNT(fc.film_id) DESC
+                """
+    )
+    res = cur.fetchall()
+    data = json.dumps(res)
+    return data
 
 @app.route('/movies/search')
 def filterMovies():
-    cur.execute(f"SELECT * FROM film where fulltext @@ (to_tsquery('Shark') && to_tsquery('Crocodile'))")
+    cur.execute(f"SELECT * FROM film where fulltext @@ to_tsquery('Shark & Crocodile')")
     res = cur.fetchall()
     return f'Movies involving shark and croc: {len(res)}'
 
