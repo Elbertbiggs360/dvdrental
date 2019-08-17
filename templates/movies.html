@@ -1,17 +1,19 @@
-<!doctype html>
-<title>All movies</title>
-{% if movies %}
-    <ul id="movienav">
-    {% for item in movies %}
-        <li>
-            {% for val in item%}
-                {{val}} 
-            {% endfor%}
-        </li>
-    {% endfor %}
-    </ul>
+{% extends "base.html" %}
 
-    <h6>Total number of movies: {{total}}</h6>
-{% else %}
-  <h1>No movies in DB</h1>
-{% endif %}
+{% block content %}
+    {% if movies %}
+        <ul id="movienav">
+        {% for item in movies %}
+            <li>
+                {% for val in item%}
+                    {{val}} 
+                {% endfor%}
+            </li>
+        {% endfor %}
+        </ul>
+
+        <h6>Total number of movies: {{total}}</h6>
+    {% else %}
+    <h1>No movies in DB</h1>
+    {% endif %}
+{% endblock %}
