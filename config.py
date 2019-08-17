@@ -12,6 +12,7 @@ class Config(object):
     DB_USER = os.environ.get('DB_USER') or 'postgres'
     DB_PASSWORD = os.environ.get('DB_PASSWORD') or ''
     DB_URI = os.environ.get('DB_URI') or 'postgresql://localhost/{}'.format(DB_NAME)
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'HeathLedgerWasTheBest'
 
 class Development(Config):
     DEBUG = True
