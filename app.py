@@ -1,11 +1,12 @@
 import os
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, flash, redirect, url_for
 from psycopg2 import connect
 from config import app_config
 import json
 import decimal
 import datetime
 from utils import Ratings
+from forms import MovieForm
 
 app = Flask(__name__)
 app_config_file = app_config[os.getenv('APP_SETTINGS') or 'development']
@@ -19,6 +20,10 @@ conn = connect(
 cur = conn.cursor()
 
 @app.route('/')
+def index():
+    return render_template('index.html', title='Home')
+
+@app.route('/ping')
 def healthcheck():
     return 'ok'
 
@@ -91,53 +96,37 @@ def filterMovies():
     res = cur.fetchall()
     return f'Movies involving shark and croc: {len(res)}'
 
-@app.route('/movies/add')
+@app.route('/movies/add', methods=['GET', 'POST'])
 def add_movie():
-    lang_id = add_language('English')
-    movies = [
-        {
-            'title': 'Dark Knight',
-            'description': 'Lorem ipsum',
-            'release_year': 2012,
-            'language_id': lang_id,
-            'rental_duration': 12,
-            'rental_rate': 2.99,
-            'length': 86,
-            'replacement_cost': 12.99
-        },
-                {
-            'title': 'Dark Knight 2',
-            'description': 'Lorem ipsum',
-            'release_year': 2012,
-            'language_id': lang_id,
-            'rental_duration': 12,
-            'rental_rate': 2.99,
-            'length': 86,
-            'replacement_cost': 12.99
-        },
-        {
-            'title': 'Dark Knight 3',
-            'description': 'Lorem ipsum',
-            'release_year': 2012,
-            'language_id': lang_id,
-            'rental_duration': 12,
-            'rental_rate': 2.99,
-            'length': 86,
-            'replacement_cost': 12.99
-        },
-    ]
-    for movie in movies:
-        cur.execute(
-            """
-            INSERT INTO film (title, description, release_year, language_id, rental_duration, rental_rate, length, replacement_cost)
-            VALUES ('{}', '{}', {}, {}, {}, {}, {}, {})
-            """.format(*[v for k, v in movie.items()])
-        )
+    form = MovieForm()
+    if not form.validate_on_submit():
+        return render_template('new_movie.html', title='Add New Movie', form=form)
+    form.data['language_id'] = add_language(form.data['language'])
+    movie = {
+            'title': '',
+            'description': '',
+            'release_year': 0,
+            'language_id': 0,
+            'rental_duration': 0,
+            'rental_rate': 0.00,
+            'length': 0,
+            'replacement_cost': 0.00
+        }
+    for k, v in movie.items():
+        movie[k] = form.data[k]
+    cur.execute(
+        """
+        INSERT INTO film (title, description, release_year, language_id, rental_duration, rental_rate, length, replacement_cost)
+        VALUES ('{}', '{}', {}, {}, {}, {}, {}, {})
+        """.format(*[v for k, v in form.data.items()])
+    )
     try:
-        conn.commit()
-        return json.dumps(movies)
+        cur.execute(f"SELECT * FROM film where fulltext @@ to_tsquery('Dark Knight')")
+        res = cur.fetchall()
+        # conn.commit()
+        return redirect(url_for('movies'))
     except Exception as e:
-        return 'Error: {}.'.format(e)
+        return redirect(url_for('index'))
 
 def add_language(lang):
     cur.execute(f"INSERT INTO language (name) VALUES ('{lang}')")
