@@ -11,7 +11,7 @@ app = Flask(__name__)
 app_config_file = app_config[os.getenv('APP_SETTINGS') or 'development']
 app.config.from_object(app_config_file)
 app.config.from_pyfile('config.py')
-
+print('>>>>>>>>>>', app_config_file)
 conn = connect(
     database=app_config_file.DB_NAME,
     user=app_config_file.DB_USER,

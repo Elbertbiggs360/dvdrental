@@ -1,7 +1,10 @@
 aniso8601==7.0.0
 attrs==19.1.0
 Click==7.0
+enum34==1.1.6
 Flask==1.0.3
+Flask-WTF==0.14.2
+gunicorn==19.9.0
 itsdangerous==1.1.0
 Jinja2==2.10.1
 jsonschema==3.0.1
@@ -12,4 +15,4 @@ python-dotenv==0.10.3
 pytz==2019.1
 six==1.12.0
 Werkzeug==0.15.4
-enum34==1.1.6
+WTForms==2.2.1
