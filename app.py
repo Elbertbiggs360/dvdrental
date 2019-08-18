@@ -49,7 +49,7 @@ def actors_filtered():
     Note that you cannot use the name of the actor with ID 8 as a constant
     (only the ID)
     '''
-    cur.execute(f"""
+    cur.execute("""
                     SELECT
                         a.first_name a_first_name,
                         a.last_name a_last_name,
@@ -79,7 +79,7 @@ def categories_filtered():
     Find all the film categories in which there are between 55 and 65 films.
     Return the names of these categories and the number of films per category, sorted by the number of films.
     '''
-    cur.execute(f"""
+    cur.execute("""
                     select c.name, COUNT(fc.film_id) as num_film
                     from category c
                     join film_category fc
@@ -100,7 +100,7 @@ def search_films():
         return render_template('search.html', title='Search for films', form=form)
     search_terms = form.data['term'].split(' ')
     search_string = ' & '.join(search_terms)
-    cur.execute(f"SELECT * FROM film where fulltext @@ to_tsquery('{search_string}')")
+    cur.execute("SELECT * FROM film where fulltext @@ to_tsquery(%s)", (search_string, ))
     res = cur.fetchall()
     return render_template('search_results.html', title='Home', res=len(res))
 
@@ -125,11 +125,11 @@ def add_movie():
     cur.execute(
         """
         INSERT INTO film (title, description, release_year, language_id, rental_duration, rental_rate, length, replacement_cost)
-        VALUES ('{}', '{}', {}, {}, {}, {}, {}, {})
-        """.format(*[v for k, v in movie.items()])
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, [(v, ) for k, v in movie.items()]
     )
     try:
-        cur.execute(f"SELECT * FROM film where fulltext @@ to_tsquery('Dark Knight')")
+        cur.execute("SELECT * FROM film where fulltext @@ to_tsquery(%s)", (movie['title'], ))
         res = cur.fetchall()
         conn.commit()
         return redirect(url_for('movies'))
@@ -138,10 +138,10 @@ def add_movie():
 
 def add_language(lang):
     try:
-        cur.execute(f"INSERT INTO language (name) VALUES ('{lang}')")
+        cur.execute("INSERT INTO language (name) VALUES (%s)", (lang, ))
     except Exception as e:
         pass
-    cur.execute(f"SELECT language_id FROM language where name='{lang}'")
+    cur.execute("SELECT language_id FROM language where name=%s", (lang, ))
     lang_id = cur.fetchone()[0]
     if conn.commit():
         return lang_id
