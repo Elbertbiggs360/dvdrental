@@ -12,3 +12,7 @@ class MovieForm(FlaskForm):
     length = IntegerField('Length')
     replacement_cost = FloatField('Replacement Cost')
     submit = SubmitField('Add movie')
+
+class SearchForm(FlaskForm):
+    term = StringField('Search term', validators=[DataRequired()])
+    submit = SubmitField('Search')

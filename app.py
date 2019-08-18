@@ -6,7 +6,7 @@ import json
 import decimal
 import datetime
 from utils import Ratings
-from forms import MovieForm
+from forms import MovieForm, SearchForm
 
 app = Flask(__name__)
 app_config_file = app_config[os.getenv('APP_SETTINGS') or 'development']
@@ -93,11 +93,16 @@ def condition3():
     data = json.dumps(res)
     return data
 
-@app.route('/movies/search')
-def filterMovies():
-    cur.execute(f"SELECT * FROM film where fulltext @@ to_tsquery('Shark & Crocodile')")
+@app.route('/movies/search', methods=['GET', 'POST'])
+def search_films():
+    form = SearchForm()
+    if not form.validate_on_submit():
+        return render_template('search.html', title='Search for films', form=form)
+    search_terms = form.data['term'].split(' ')
+    search_string = ' & '.join(search_terms)
+    cur.execute(f"SELECT * FROM film where fulltext @@ to_tsquery('{search_string}')")
     res = cur.fetchall()
-    return f'Movies involving shark and croc: {len(res)}'
+    return render_template('search_results.html', title='Home', res=len(res))
 
 @app.route('/movies/add', methods=['GET', 'POST'])
 def add_movie():
