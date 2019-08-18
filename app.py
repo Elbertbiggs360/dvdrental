@@ -40,12 +40,8 @@ def movies():
 def movie(movie_name):
     return render_template('movie.html', movie_name=movie_name)
 
-@app.route('/categories')
-def categories():
-    pass
-
-@app.route('/condition2')
-def condition2():
+@app.route('/actors/condition2')
+def actors_filtered():
     '''
     Find the names (first and last) of all the actors and customers whose
     first name is the same as the first name of the actor with ID 8.
@@ -55,7 +51,6 @@ def condition2():
     '''
     cur.execute(f"""
                     SELECT
-                        a.actor_id,
                         a.first_name a_first_name,
                         a.last_name a_last_name,
                         c.first_name c_first_name,
@@ -70,8 +65,13 @@ def condition2():
                 """
     )
     res = cur.fetchall()
-    res
-    return json.dumps(res)
+    result_list = []
+    for row in res:
+        result_list.append(row[:2])
+        result_list.append(row[2:])
+    actor_8 = result_list.pop(0) # remove the actor with id 8 who is the first match
+    results = list(set(result_list))
+    return render_template('actors.html', title='Actors', actors=results)
 
 @app.route('/categories/condition3')
 def categories_filtered():
