@@ -29,7 +29,10 @@ def healthcheck():
 
 @app.route('/movies')
 def movies():
-    cur.execute('SELECT title FROM film')
+    try:
+        cur.execute('SELECT title FROM film')
+    except Exception as e:
+        print('Failing: ', e)
     items = cur.fetchall()
     return render_template('movies.html', movies=items, total=len(items))
 
@@ -101,12 +104,11 @@ def add_movie():
     form = MovieForm()
     if not form.validate_on_submit():
         return render_template('new_movie.html', title='Add New Movie', form=form)
-    form.data['language_id'] = add_language(form.data['language'])
+    lang_id = add_language(form.data['language'])
     movie = {
             'title': '',
             'description': '',
             'release_year': 0,
-            'language_id': 0,
             'rental_duration': 0,
             'rental_rate': 0.00,
             'length': 0,
@@ -114,22 +116,26 @@ def add_movie():
         }
     for k, v in movie.items():
         movie[k] = form.data[k]
+    movie['language_id'] = movie.get('language_id', lang_id)
     cur.execute(
         """
         INSERT INTO film (title, description, release_year, language_id, rental_duration, rental_rate, length, replacement_cost)
         VALUES ('{}', '{}', {}, {}, {}, {}, {}, {})
-        """.format(*[v for k, v in form.data.items()])
+        """.format(*[v for k, v in movie.items()])
     )
     try:
         cur.execute(f"SELECT * FROM film where fulltext @@ to_tsquery('Dark Knight')")
         res = cur.fetchall()
-        # conn.commit()
+        conn.commit()
         return redirect(url_for('movies'))
     except Exception as e:
         return redirect(url_for('index'))
 
 def add_language(lang):
-    cur.execute(f"INSERT INTO language (name) VALUES ('{lang}')")
+    try:
+        cur.execute(f"INSERT INTO language (name) VALUES ('{lang}')")
+    except Exception as e:
+        pass
     cur.execute(f"SELECT language_id FROM language where name='{lang}'")
     lang_id = cur.fetchone()[0]
     if conn.commit():
