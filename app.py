@@ -73,8 +73,8 @@ def condition2():
     res
     return json.dumps(res)
 
-@app.route('/condition3')
-def condition3():
+@app.route('/categories/condition3')
+def categories_filtered():
     '''b
     Find all the film categories in which there are between 55 and 65 films.
     Return the names of these categories and the number of films per category, sorted by the number of films.
@@ -91,7 +91,7 @@ def condition3():
     )
     res = cur.fetchall()
     data = json.dumps(res)
-    return data
+    return render_template('categories.html', title='Categories', categories=res)
 
 @app.route('/movies/search', methods=['GET', 'POST'])
 def search_films():
