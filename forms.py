@@ -11,6 +11,7 @@ class MovieForm(FlaskForm):
     rental_rate = FloatField('Rental Rate', validators=[DataRequired()])
     length = IntegerField('Length')
     replacement_cost = FloatField('Replacement Cost')
+    manual_csrf_token = HiddenField('manual csrf', validators=[DataRequired()])
     submit = SubmitField('Add movie')
 
 class SearchForm(FlaskForm):

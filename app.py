@@ -150,7 +150,9 @@ def search_films():
 @app.route('/movies/add', methods=['GET', 'POST'])
 def add_movie():
     form = MovieForm()
-    if not form.validate_on_submit():
+    if not verify_csrf_token(form.data['manual_csrf_token']):
+        token = generate_csrf_token()
+        form.manual_csrf_token.data = token
         return render_template('new_movie.html', title='Add New Movie', form=form)
     lang_id = add_language(form.data['language'])
     movie = {
