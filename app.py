@@ -102,7 +102,7 @@ def search_films():
     search_string = ' & '.join(search_terms)
     cur.execute("SELECT * FROM film where fulltext @@ to_tsquery(%s)", (search_string, ))
     res = cur.fetchall()
-    return render_template('search_results.html', title='Home', res=len(res))
+    return render_template('search_results.html', title='Home', res=res, len=len(res))
 
 @app.route('/movies/add', methods=['GET', 'POST'])
 def add_movie():

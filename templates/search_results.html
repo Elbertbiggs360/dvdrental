@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
+{% if res %}
 <p>
-        Number of results: {{ res }}
+        Number of results: {{ len }}
 </p>
+<br/>
+<ul id="movienav">
+{% for item in res %}
+    <li>
+        <h4>{{item[1]}}</h4>
+        <span>{{item[2]}}</span>
+        <hr/>
+    </li>
+{% endfor %}
+</ul>
+{% else %}
+<h1>No movies found</h1>
+{% endif %}
+
 {% endblock %}
