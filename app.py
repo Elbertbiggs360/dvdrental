@@ -1,5 +1,7 @@
 import os
-from flask import Flask, render_template, abort, flash, redirect, url_for
+import hmac
+from flask import Flask, render_template, abort, flash, redirect, url_for, session
+from flask_session import Session
 from psycopg2 import connect
 from config import app_config
 import json
@@ -7,17 +9,55 @@ import decimal
 import datetime
 from utils import Ratings
 from forms import MovieForm, SearchForm
+from hashlib import sha256
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
+
+TIME_FORMAT = '%Y%m%d%H%M%S'
+
 app_config_file = app_config[os.getenv('APP_SETTINGS') or 'development']
 app.config.from_object(app_config_file)
 app.config.from_pyfile('config.py')
+Session(app)
+
 conn = connect(
     database=app_config_file.DB_NAME,
     host=app_config_file.DB_HOST,
     user=app_config_file.DB_USER,
     password=app_config_file.DB_PASSWORD)
 cur = conn.cursor()
+
+
+def generate_csrf_token():
+    session['csrf'] = session.get('csrf', sha256(os.urandom(64)).hexdigest())
+    time_limit = timedelta(minutes=app_config_file.TOKEN_TIMEOUT)
+    expires = (datetime.now() + time_limit).strftime(TIME_FORMAT)
+    
+    csrf_build = f'{session["csrf"]}{expires}'
+    hmac_csrf = hmac.new(
+        app_config_file.SECRET_KEY.encode('utf-8'),
+        csrf_build.encode('utf8'),
+        digestmod=sha256
+    )
+    
+    return f'{expires}##{hmac_csrf.hexdigest()}'
+
+def verify_csrf_token(csrf_token):
+    if not csrf_token or '##' not in csrf_token:
+        return False
+    expires, hmac_csrf = csrf_token.split('##', 1)
+    
+    check_val = (session['csrf'] + expires).encode('utf8')
+    hmac_compare = hmac.new(app_config_file.SECRET_KEY.encode('utf-8'), check_val, digestmod=sha256)
+    if hmac_compare.hexdigest() != hmac_csrf:
+        raise ValueError('CSRF failed')
+    
+    now_formatted = datetime.now().strftime(TIME_FORMAT)
+    if now_formatted > expires:
+        raise 'Token Expired'
+    return True
+
 
 @app.route('/')
 def index():
@@ -96,8 +136,11 @@ def categories_filtered():
 @app.route('/movies/search', methods=['GET', 'POST'])
 def search_films():
     form = SearchForm()
-    if not form.validate_on_submit():
+    if not verify_csrf_token(form.data['manual_csrf_token']):
+        token = generate_csrf_token()
+        form.manual_csrf_token.data = token
         return render_template('search.html', title='Search for films', form=form)
+    
     search_terms = form.data['term'].split(' ')
     search_string = ' & '.join(search_terms)
     cur.execute("SELECT * FROM film where fulltext @@ to_tsquery(%s)", (search_string, ))

@@ -14,6 +14,8 @@ class Config(object):
     DB_URI = os.environ.get('DB_URI') or 'postgresql://localhost/{}'.format(DB_NAME)
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'HeathLedgerWasTheBest'
     DB_HOST = os.environ.get('DB_HOST') or '127.0.0.1'
+    TOKEN_TIMEOUT = os.environ.get('TOKEN_TIMEOUT') or 3000
+    SESSION_TYPE = "filesystem"
 
 class Development(Config):
     DEBUG = True

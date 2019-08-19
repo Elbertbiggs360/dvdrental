@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, FloatField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, FloatField, HiddenField
 from wtforms.validators import DataRequired
 
 class MovieForm(FlaskForm):
@@ -14,5 +14,6 @@ class MovieForm(FlaskForm):
     submit = SubmitField('Add movie')
 
 class SearchForm(FlaskForm):
+    manual_csrf_token = HiddenField('manual csrf', validators=[DataRequired()])
     term = StringField('Search term', validators=[DataRequired()])
     submit = SubmitField('Search')
