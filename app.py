@@ -110,37 +110,51 @@ def add_movie():
     if not form.validate_on_submit():
         return render_template('new_movie.html', title='Add New Movie', form=form)
     lang_id = add_language(form.data['language'])
-    movie = {
-            'title': '',
-            'description': '',
-            'release_year': 0,
-            'rental_duration': 0,
-            'rental_rate': 0.00,
-            'length': 0,
-            'replacement_cost': 0.00
-        }
-    for k, v in movie.items():
-        movie[k] = form.data[k]
-    movie['language_id'] = movie.get('language_id', lang_id)
+
+    movie_attr = [
+        {'title': ''},
+        {'description': ''},
+        {'release_year': 0},
+        {'rental_duration': 0},
+        {'rental_rate': 0.00},
+        {'length': 0},
+        {'replacement_cost': ''}
+    ]
+    for attr in movie_attr:
+        for k, v in attr.items():
+            attr[k] = form.data[k]
+    movie_attr.append({'language_id': lang_id})
+    param_subs = []
+    for attr in movie_attr:
+        for k, v in attr.items():
+            param = (v,)
+            param_subs.append(param)
     cur.execute(
         """
-        INSERT INTO film (title, description, release_year, language_id, rental_duration, rental_rate, length, replacement_cost)
+        INSERT INTO film (title, description, release_year, rental_duration, rental_rate, length, replacement_cost, language_id)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, [(v, ) for k, v in movie.items()]
+        """, param_subs
     )
     try:
-        cur.execute("SELECT * FROM film where fulltext @@ to_tsquery(%s)", (movie['title'], ))
+        confirmation_query = ' & '.join(param_subs[0][0].split(' '))
+        cur.execute("SELECT * FROM film where fulltext @@ to_tsquery(%s)", (confirmation_query, ))
         res = cur.fetchall()
-        conn.commit()
-        return redirect(url_for('movies'))
+        message = ''
+        if len(res) > 0:
+            conn.commit()
+            message = 'Successfully added movie!'
+        else:
+            message = 'Failed to add movie for some reason. Try again'
+        return render_template('status.html', message=message)
     except Exception as e:
+        print(e)
         return redirect(url_for('index'))
 
 def add_language(lang):
     try:
         cur.execute("INSERT INTO language (name) VALUES (%s)", (lang, ))
     except Exception as e:
-        pass
+        cur.execute('rollback')
     cur.execute("SELECT language_id FROM language where name=%s", (lang, ))
     lang_id = cur.fetchone()[0]
     if conn.commit():
