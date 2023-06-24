@@ -1,11 +1,9 @@
 import os
-from flask import Flask, render_template, abort, flash, redirect, url_for
+from flask import Flask
+from flask import render_template, redirect, url_for
 from psycopg2 import connect
 from config import app_config
 import json
-import decimal
-import datetime
-from utils import Ratings
 from forms import MovieForm, SearchForm
 
 app = Flask(__name__)
@@ -156,7 +154,8 @@ def add_language(lang):
     except Exception as e:
         cur.execute('rollback')
     cur.execute("SELECT language_id FROM language where name=%s", (lang, ))
-    lang_id = cur.fetchone()[0]
+    languages = cur.fetchone()
+    lang_id = languages[0]
     if conn.commit():
         return lang_id
     return lang_id
